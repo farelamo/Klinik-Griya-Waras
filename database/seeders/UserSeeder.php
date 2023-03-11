@@ -18,7 +18,7 @@ class UserSeeder extends Seeder
             'birth'     => date('Y-m-d'),
             'address'   => 'Jl. Arteri Ringroad Utara Gejayan No.6, Sanggrahan, Condongcatur, Kec. Depok, Kabupaten Sleman, Daerah Istimewa Yogyakarta',
             'phone'     => '08' . rand(1000000000,5000000000),
-            'password'  => bcrypt('rahasiabro'),
+            'password'  => bcrypt('rahasia'),
         ]);
 
         User::factory()->count(50)->create();
