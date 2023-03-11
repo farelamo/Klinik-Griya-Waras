@@ -12,7 +12,7 @@ class UserFactory extends Factory
         $gender         = ['L', 'P'];
         $choosen_gender = array_rand($gender);
 
-        $role         = ['admin', 'doctor', 'patient'];
+        $role         = ['admin', 'doctor', 'patient', 'pharmacist'];
         $choosen_role = array_rand($role);
 
         return [
