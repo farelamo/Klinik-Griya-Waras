@@ -11,12 +11,12 @@ class MedicalRecord extends Model
 
     protected $fillable = ['patient_id', 'complaint', 'doctor_id', 'diagnose', 'drugs'];
 
-    public function Patient()
+    public function patient()
     {
         return $this->belongsTo(User::class, 'patient_id');
     }
 
-    public function Doctor()
+    public function doctor()
     {
         return $this->belongsTo(User::class, 'doctor_id');
     }
