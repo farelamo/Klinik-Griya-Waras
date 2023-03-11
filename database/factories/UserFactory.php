@@ -23,7 +23,7 @@ class UserFactory extends Factory
             'birth'      => date('Y-m-d'),
             'address'    => fake()->address(),
             'phone'      => '08' . rand(1000000000,5000000000),
-            'password'   => bcrypt('rahasiabro'),
+            'password'   => bcrypt('rahasia'),
             'identifier' => rand(100000000000, 500000000000),
         ];
     }
