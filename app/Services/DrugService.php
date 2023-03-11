@@ -60,7 +60,11 @@
         {
             try {
 
-                $data = Drug::create($request->all());
+                $data = Drug::create([
+                    'name'        => $request->name,
+                    'description' => $request->description,
+                    'stock'       => $request->stock
+                ]);
                 return $this->success('Successfully create data ' .  $data->name);
             }catch(Exception $e){
                 return $this->internalServerError();
@@ -73,7 +77,11 @@
 
                 $data = Drug::where('id', $id)->first();
                 if(!$data) return $this->notFound($id);
-                $data->update($request->all());
+                $data->update([
+                    'name'        => $request->name,
+                    'description' => $request->description,
+                    'stock'       => $request->stock
+                ]);
 
                 return $this->success('Successfully update data ' .  $data->name);
             }catch(Exception $e){
