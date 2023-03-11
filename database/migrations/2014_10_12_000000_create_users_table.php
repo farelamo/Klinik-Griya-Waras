@@ -17,7 +17,8 @@ return new class extends Migration
             $table->date('birth');
             $table->text('address');
             $table->string('phone', 13);
-            $table->string('password')->nullable();
+            $table->text('password')->nullable();
+            $table->string('identifier', 16)->nullable();
             $table->timestamps();
         });
     }
