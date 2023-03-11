@@ -16,14 +16,15 @@ class UserFactory extends Factory
         $choosen_role = array_rand($role);
 
         return [
-            'name'      => fake()->name(),
-            'email'     => fake()->unique()->safeEmail(),
-            'role'      => $role[$choosen_role],
-            'gender'    => $gender[$choosen_gender],
-            'birth'     => date('Y-m-d'),
-            'address'   => fake()->address(),
-            'phone'     => '08' . rand(1000000000,5000000000),
-            'password'  => bcrypt('rahasiabro'),
+            'name'       => fake()->name(),
+            'email'      => fake()->unique()->safeEmail(),
+            'role'       => $role[$choosen_role],
+            'gender'     => $gender[$choosen_gender],
+            'birth'      => date('Y-m-d'),
+            'address'    => fake()->address(),
+            'phone'      => '08' . rand(1000000000,5000000000),
+            'password'   => bcrypt('rahasiabro'),
+            'identifier' => rand(100000000000, 500000000000),
         ];
     }
 }
