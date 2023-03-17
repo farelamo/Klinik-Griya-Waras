@@ -23,6 +23,9 @@
                 $check = User::where('email', $request->email)->first();
                 if(!$check)
                     return $this->returnCondition(false, 404, 'email not found');
+                
+                if($check->role == 'pasien')
+                    return $this->returnCondition(false, 401, 'invalid role access');
 
                 if (!$token = auth()->attempt([
                     'email'     => $request->email,

@@ -10,12 +10,23 @@ class UserController extends Controller
 {
     public function __construct(UserService $service)
     {
+        $this->middleware(['double.admin'])->except(['index']);
         $this->service = $service;
     }
 
     public function index(Request $request)
     {
-        return $this->service->index($request);
+        if(
+            auth()->user()->role == 'superadmin' ||
+            auth()->user()->role == 'admin'      ||
+            auth()->user()->role == 'doctor'
+        )
+            return $this->service->index($request);
+            
+        return response()->json([
+            'success' => false,
+            'message' => 'invalid role access',
+        ], 401);
     }
 
     public function show($id)
