@@ -21,6 +21,20 @@
             ], $errorCode);
         }
 
+        public function checkAccess($request)
+        {
+            if(auth()->user()->role != 'superadmin' || auth()->user()->role != 'admin')
+                return $this->returnCondition(false, 401, 'Invalid role access');
+
+            if(auth()->user()->role == 'superadmin')
+                if($request->role != 'admin')
+                    return $this->returnCondition(false, 401, 'Invalid role access');
+
+            if(auth()->user()->role == 'admin')
+                if($request->role == 'admin')
+                    return $this->returnCondition(false, 401, 'Invalid role access');
+        }
+
         public function checkEmailAndPass($request, $action = true)
         {
             $emailRule    = $action ? 'required|' : '';
@@ -111,8 +125,10 @@
         public function store(UserRequest $request)
         {
             try {
-                
+
                 $this->checkRole($request);
+                if ($this->checkAccess($request))
+                    return $this->checkAccess($request);
 
                 $createData = [
                     'name'       => $request->name,

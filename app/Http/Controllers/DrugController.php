@@ -10,12 +10,23 @@ class DrugController extends Controller
 {
     public function __construct(DrugService $service)
     {
+        $this->middleware(['pharmacist'])->except(['index']);
         $this->service = $service;
     }
 
     public function index()
     {
-        return $this->service->index();
+        if(
+            auth()->user()->role == 'superadmin' ||
+            auth()->user()->role == 'pharmacist' ||
+            auth()->user()->role == 'doctor'
+        )
+            return $this->service->index();
+        
+        return response()->json([
+            'success' => false,
+            'message' => 'invalid role access',
+        ], 401);
     }
 
     public function show($id)

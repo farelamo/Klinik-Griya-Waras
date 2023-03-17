@@ -10,12 +10,21 @@ class MedicalRecordController extends Controller
 {
     public function __construct(MedicalRecordService $service)
     {
+        $this->middleware('doctor')->except(['index', 'receipt', 'approvePharmacist']);
+        $this->middleware('pharmacist')->only(['approvePharmacist']);
         $this->service = $service;
     }
 
     public function index()
     {
-        return $this->service->index();
+        if(auth()->user()->role == 'superadmin' || auth()->user()->role == 'doctor')
+            return $this->service->index();
+
+        return response()->json([
+            'success' => false,
+            'message' => 'invalid role access',
+        ], 401);
+
     }
 
     public function show($id)
@@ -36,5 +45,21 @@ class MedicalRecordController extends Controller
     public function destroy($id)
     {
         return $this->service->destroy($id);
+    }
+
+    public function receipt()
+    {
+        if(auth()->user()->role == 'superadmin' || auth()->user()->role == 'pharmacist')
+            return $this->service->receipt();
+            
+        return response()->json([
+            'success' => false,
+            'message' => 'invalid role access',
+        ], 401);
+    }
+    
+    public function approvePharmacist($id)
+    {
+        return $this->service->approvePharmacist($id);
     }
 }

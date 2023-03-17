@@ -1,8 +1,8 @@
 <?php
     namespace App\Services;
 
-    use Log;
     use Exception;
+    use Carbon\Carbon;
     use App\Models\MedicalRecord;
     use App\Services\UserService;
     use Illuminate\Support\Facades\Validator;
@@ -130,6 +130,38 @@
                 $data->delete();
 
                 return $this->returnCondition(true, 200, 'Successfully delete data ' .  $data->id);
+            }catch(Exception $e){
+                return $this->returnCondition(false, 500, 'Internal Server Error');
+            }
+        }
+
+        public function receipt()
+        {
+            try {
+                
+                $medical_records = MedicalRecord::select(
+                    'id', 'patient_id', 'complaint', 'doctor_id', 
+                    'diagnose', 'drugs', 'created_at',
+                )
+                ->where('pharmacist', false)
+                ->whereRaw('date(created_at) = ?', [Carbon::now()->format('Y-m-d')])
+                ->paginate(5);
+
+                return new MedicalRecordCollection($medical_records);
+            }catch(Exception $e){
+                return $this->returnCondition(false, 500, 'Internal Server Error');
+            }
+        }
+
+        public function approvePharmacist($id)
+        {
+            try {
+
+                $data = MedicalRecord::where('id', $id)->first();
+                if(!$data) return $this->returnCondition(false, 404, 'data with id ' . $id . ' not found');
+
+                $data->update(['pharmacist' => true]);
+                return $this->returnCondition(true, 200, 'Successfully approve data ' .  $data->id);
             }catch(Exception $e){
                 return $this->returnCondition(false, 500, 'Internal Server Error');
             }
