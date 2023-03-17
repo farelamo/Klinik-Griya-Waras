@@ -23,7 +23,7 @@
 
         public function checkAccess($request)
         {
-            if(auth()->user()->role != 'superadmin' || auth()->user()->role != 'admin')
+            if(auth()->user()->role != 'superadmin' && auth()->user()->role != 'admin')
                 return $this->returnCondition(false, 401, 'Invalid role access');
 
             if(auth()->user()->role == 'superadmin')
@@ -173,6 +173,9 @@
                 $data = User::where('id', $id)->first();
                 if(!$data) return $this->returnCondition(false, 404, 'Data with id ' . $id . ' not found');
 
+                if ($this->checkAccess($data))
+                    return $this->checkAccess($data);
+
                 if($data->role == 'patient')
                     return $this->returnCondition(false, 400, 'invalid url update patient data');
 
@@ -208,6 +211,9 @@
 
                 $data = User::where('id', $id)->first();
                 if(!$data) return $this->returnCondition(false, 400, 'data with id ' . $id . ' not found');
+
+                if ($this->checkAccess($data))
+                    return $this->checkAccess($data);
 
                 $data->delete();
 

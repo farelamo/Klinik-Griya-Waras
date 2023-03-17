@@ -10,7 +10,7 @@ class SuperadminAdminMiddleware
 {
     public function handle(Request $request, Closure $next): Response
     {
-        if(auth()->user()->role != 'superadmin' || auth()->user()->role != 'admin')
+        if(auth()->user()->role != 'superadmin' && auth()->user()->role != 'admin')
             return response()->json([
                 'success' => false,
                 'message' => 'Invalid role access'
