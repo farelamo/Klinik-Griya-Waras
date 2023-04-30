@@ -5,6 +5,7 @@ namespace Database\Seeders;
 use Illuminate\Database\Console\Seeds\WithoutModelEvents;
 use Illuminate\Database\Seeder;
 use App\Models\User;
+use App\Models\Patient;
 
 class UserSeeder extends Seeder
 {
@@ -21,6 +22,25 @@ class UserSeeder extends Seeder
             'password'  => bcrypt('rahasia'),
         ]);
 
-        User::factory()->count(50)->create();
+        User::factory()->count(10)->sequence(
+                ['role' => 'admin'],
+                ['role' => 'pharmacist'],
+            )->create();
+
+        /* 
+            Kuncinya ada di model yang function relasi (return $this->belongsTo, dll) 
+            untuk keperluan custom nama tabel pivotnya sama custom nama field serta
+            mengisi field timestamp (->withTimestamps())
+        */
+        User::factory()->count(10)
+            ->state(['role' => 'doctor'])
+            ->hasAttached(
+                Patient::factory()->count(3),
+                [
+                    'complaint'  => fake()->realTextBetween(),
+                    'diagnose'   => fake()->realTextBetween(),
+                ]
+            )
+            ->create();
     }
 }

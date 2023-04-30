@@ -14,19 +14,16 @@ class MedicalRecordRequest extends FormRequest
     public function rules(): array
     {
         return [
-            'complaint'   => 'required',
-            'diagnose'    => 'required',
-            'drugs'       => 'required|array',
+            'complaint'             => 'required',
+            'diagnose'              => 'required',
         ];
     }
 
     public function messages(): array
     {
         return [
-            'complaint.required'  => 'complaint must be filled',
-            'diagnose.required'   => 'diagnose must be filled',
-            'drugs.required'      => 'drugs must be filled',
-            'drugs.array'         => 'drugs must be type of array',
+            'complaint.required'     => 'complaint must be filled',
+            'diagnose.required'      => 'diagnose must be filled',
         ];
     }
 }
