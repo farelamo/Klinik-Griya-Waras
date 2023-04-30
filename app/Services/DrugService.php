@@ -9,28 +9,12 @@
 
     class DrugService {
 
-        public function internalServerError()
+        public function returnCondition($condition, $errorCode, $message)
         {
             return response()->json([
-                'success' => false,
-                'message' => 'Internal Service Error'
-            ], 500);
-        }
-
-        public function notFound($id)
-        {
-            return response()->json([
-                'success' => false,
-                'message' => 'Data with id ' . $id . ' not found' 
-            ], 404);
-        }
-
-        public function success($message)
-        {
-            return response()->json([
-                'success' => true,
-                'message' => $message
-            ], 200);
+                'success' => $condition,
+                'message' => $message,
+            ], $errorCode);
         }
 
         public function index()
@@ -41,7 +25,7 @@
                 
                 return new DrugCollection($drugs);
             }catch(Exception $e){
-                return $this->internalServerError();
+                return $this->returnCondition(false, 500, 'Internal Server Error');
             }
         }
 
@@ -50,11 +34,11 @@
             try {
 
                 $drug = Drug::where('id', $id)->first();
-                if(!$drug) return $this->notFound($id);
+                if(!$drug) return $this->returnCondition(false, 404, 'data with id ' . $id . ' not found');
                 
                 return new BaseResource($drug);
             }catch(Exception $e){
-                return $this->internalServerError();
+                return $this->returnCondition(false, 500, 'Internal Server Error');
             }
         }
 
@@ -68,9 +52,9 @@
                     'stock'       => $request->stock
                 ]);
                 
-                return $this->success('Successfully create data ' .  $data->name);
+                return $this->returnCondition(true, 200, 'Successfully create data ' .  $data->name);
             }catch(Exception $e){
-                return $this->internalServerError();
+                return $this->returnCondition(false, 500, 'Internal Server Error');
             }
         }
 
@@ -79,7 +63,7 @@
             try {
 
                 $data = Drug::where('id', $id)->first();
-                if(!$data) return $this->notFound($id);
+                if(!$data) return $this->returnCondition(false, 404, 'data with id ' . $id . ' not found');
                 
                 $data->update([
                     'name'        => $request->name,
@@ -87,9 +71,9 @@
                     'stock'       => $request->stock
                 ]);
 
-                return $this->success('Successfully update data ' .  $data->name);
+                return $this->returnCondition(true, 200, 'Successfully create data ' .  $data->name);
             }catch(Exception $e){
-                return $this->internalServerError();
+                return $this->returnCondition(false, 500, 'Internal Server Error');
             }
         }
 
@@ -97,13 +81,13 @@
         {
             try {
                 $data = Drug::where('id', $id)->first();
-                if(!$data) return $this->notFound($id);
+                if(!$data) return $this->returnCondition(false, 404, 'data with id ' . $id . ' not found');
                 
                 $data->delete();
 
-                return $this->success('Successfully delete data ' .  $data->name);
+                return $this->returnCondition(true, 200, 'Successfully create data ' .  $data->name);
             }catch(Exception $e){
-                return $this->internalServerError();
+                return $this->returnCondition(false, 500, 'Internal Server Error');
             }
         }
     }
