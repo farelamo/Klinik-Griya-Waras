@@ -6,8 +6,8 @@
     use Illuminate\Http\Request;
     use App\Http\Requests\UserRequest;
     use Illuminate\Support\Facades\Auth;
+    use App\Http\Resources\BaseResource;
     use Illuminate\Support\Facades\Validator;
-    use App\Http\Resources\User\UserResource;
     use App\Http\Resources\User\UserCollection;
     use Illuminate\Validation\ValidationException;
 
@@ -58,7 +58,7 @@
         public function checkRole($request)
         {
             $rules = [
-                'role' => 'required|in:admin,doctor,patient,pharmacist',
+                'role' => 'required|in:admin,doctor,pharmacist',
             ];
 
             Validator::make($request->all(), $rules, $messages = 
@@ -68,27 +68,13 @@
             ])->validate();
         }
 
-        public function checkPatientIdentifier($request)
-        {
-            $rules = [
-                'identifier' => 'required|min:13|max:16',
-            ];
-
-            Validator::make($request->all(), $rules, $messages = 
-            [
-                'identifier.required' => 'identifier must be filled',
-                'identifier.min'      => 'minimal identifier is 13 character',
-                'identifier.max'      => 'maximal identifier is 16 character',
-            ])->validate();
-        }
-
         public function index(Request $request)
         {
             try {
                 if(!$request->role)
                     return $this->returnCondition(false, 400, 'role params must be filled');
 
-                $roles = ['admin', 'doctor', 'patient', 'pharmacist'];
+                $roles = ['admin', 'doctor', 'pharmacist'];
                 if(!in_array($request->role, $roles))
                     return $this->returnCondition(false, 404, 'Data with role ' . $request->role . ' not found');
 
@@ -112,11 +98,11 @@
 
                 if(!$user) return $this->returnCondition(false, 404, 'Data with id ' . $id . ' not found');
                 
-                if($user->role == 'patient') :
-                    $user->makeHidden(['email']);
-                endif;
+                // if($user->role == 'patient') :
+                //     $user->makeHidden(['email']);
+                // endif;
 
-                return new UserResource($user);
+                return new BaseResource($user);
             }catch(Exception $e){
                 return $this->returnCondition(false, 500, 'Internal Service Error');
             }
@@ -125,8 +111,9 @@
         public function store(UserRequest $request)
         {
             try {
-
+                
                 $this->checkRole($request);
+                
                 if ($this->checkAccess($request))
                     return $this->checkAccess($request);
 
@@ -139,24 +126,12 @@
                     'phone'      => $request->phone,
                 ];
 
-                if($request->role != 'patient') :
-                    $this->checkEmailAndPass($request);
+                $this->checkEmailAndPass($request);
 
-                    $createData['email']    = $request->email;
-                    $createData['password'] = bcrypt($request->password);
+                $createData['email']    = $request->email;
+                $createData['password'] = bcrypt($request->password);
 
-                    $data = User::create($createData);
-
-                endif;
-
-                if($request->role == 'patient') :
-                    $this->checkPatientIdentifier($request);
-
-                    $createData['identifier'] = $request->identifier;
-
-                    User::updateOrCreate(['identifier' => $request->identifier], $createData);
-
-                endif;
+                $data = User::create($createData);
 
                 return $this->returnCondition(true, 200, 'Successfully create data ' .  $request->role);
             }catch (ValidationException $th) {
@@ -175,9 +150,6 @@
 
                 if ($this->checkAccess($data))
                     return $this->checkAccess($data);
-
-                if($data->role == 'patient')
-                    return $this->returnCondition(false, 400, 'invalid url update patient data');
 
                 if($request->email || $request->password)
                     $this->checkEmailAndPass($request, false);

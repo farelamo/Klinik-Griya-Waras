@@ -4,7 +4,7 @@
     use Exception;
     use App\Models\Drug;
     use App\Http\Requests\DrugRequest;
-    use App\Http\Resources\Drug\DrugResource;
+    use App\Http\Resources\BaseResource;
     use App\Http\Resources\Drug\DrugCollection;
 
     class DrugService {
@@ -38,6 +38,7 @@
             try {
 
                 $drugs = Drug::select('id', 'name', 'description', 'stock')->paginate(5);
+                
                 return new DrugCollection($drugs);
             }catch(Exception $e){
                 return $this->internalServerError();
@@ -50,7 +51,8 @@
 
                 $drug = Drug::where('id', $id)->first();
                 if(!$drug) return $this->notFound($id);
-                return new DrugResource($drug);
+                
+                return new BaseResource($drug);
             }catch(Exception $e){
                 return $this->internalServerError();
             }
@@ -65,6 +67,7 @@
                     'description' => $request->description,
                     'stock'       => $request->stock
                 ]);
+                
                 return $this->success('Successfully create data ' .  $data->name);
             }catch(Exception $e){
                 return $this->internalServerError();
@@ -77,6 +80,7 @@
 
                 $data = Drug::where('id', $id)->first();
                 if(!$data) return $this->notFound($id);
+                
                 $data->update([
                     'name'        => $request->name,
                     'description' => $request->description,
@@ -94,6 +98,7 @@
             try {
                 $data = Drug::where('id', $id)->first();
                 if(!$data) return $this->notFound($id);
+                
                 $data->delete();
 
                 return $this->success('Successfully delete data ' .  $data->name);

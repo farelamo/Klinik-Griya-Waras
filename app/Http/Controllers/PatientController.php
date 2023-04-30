@@ -3,20 +3,24 @@
 namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
-use App\Services\UserService;
-use App\Http\Requests\UserRequest;
+use App\Services\PatientService;
+use App\Http\Requests\PatientRequest;
 
-class UserController extends Controller
+class PatientController extends Controller
 {
-    public function __construct(UserService $service)
+    public function __construct(PatientService $service)
     {
-        $this->middleware(['double.admin'])->except(['index']);
+        $this->middleware('admin')->except(['index']);
         $this->service = $service;
     }
 
     public function index(Request $request)
     {
-        if(auth()->user()->role == 'superadmin' || auth()->user()->role == 'admin')
+        if(
+            auth()->user()->role == 'superadmin' ||
+            auth()->user()->role == 'admin'      ||
+            auth()->user()->role == 'doctor'
+        )
             return $this->service->index($request);
             
         return response()->json([
@@ -30,12 +34,12 @@ class UserController extends Controller
         return $this->service->show($id);
     }
 
-    public function store(UserRequest $request)
+    public function store(PatientRequest $request)
     {
         return $this->service->store($request);
     }
 
-    public function update($id, UserRequest $request)
+    public function update($id, PatientRequest $request)
     {
         return $this->service->update($id, $request);
     }

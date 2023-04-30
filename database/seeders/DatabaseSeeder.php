@@ -3,8 +3,6 @@
 namespace Database\Seeders;
 
 use Illuminate\Database\Seeder;
-use Database\Seeders\UserSeeder;
-use Database\Seeders\DrugSeeder;
 
 class DatabaseSeeder extends Seeder
 {
@@ -12,6 +10,7 @@ class DatabaseSeeder extends Seeder
     {
         return $this->call([
             UserSeeder::class,
+            TypeConcoctionSeeder::class,
             DrugSeeder::class,
         ]);
     }
