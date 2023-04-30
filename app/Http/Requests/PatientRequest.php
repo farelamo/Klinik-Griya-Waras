@@ -19,7 +19,6 @@ class PatientRequest extends FormRequest
             'birth'      => 'required|date|date_format:Y-m-d',
             'address'    => 'required',
             'phone'      => 'required|max:13',
-            'identifier' => 'required|min:13|max:16',
         ];
     }
 
@@ -36,9 +35,6 @@ class PatientRequest extends FormRequest
             'address.required'    => 'address must be filled',
             'phone.required'      => 'phone must be filled',
             'phone.max'           => 'maximum of phone is 13 number',
-            'identifier.required' => 'identifier must be filled',
-            'identifier.min'      => 'minimal identifier is 13 character',
-            'identifier.max'      => 'maximal identifier is 16 character',
         ];
     }
 }

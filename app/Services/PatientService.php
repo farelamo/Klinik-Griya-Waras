@@ -8,6 +8,7 @@
     use Illuminate\Support\Facades\Auth;
     use App\Http\Resources\BaseResource;
     use Illuminate\Support\Facades\Validator;
+    use Illuminate\Validation\ValidationException;
     use App\Http\Resources\Patient\PatientCollection;
 
     class PatientService {
@@ -20,7 +21,22 @@
             ], $errorCode);
         }
 
-        public function index(Request $request)
+        public function checkIdentifier($request)
+        {
+            $rules = [
+                'identifier' => 'required|min:13|max:16|unique:patients,identifier',
+            ];
+
+            Validator::make($request->all(), $rules, $messages = 
+            [
+                'identifier.required' => 'identifier must be filled',
+                'identifier.unique'   => 'identifier has already taken',
+                'identifier.min'      => 'minimal identifier is 13 character',
+                'identifier.max'      => 'maximal identifier is 16 character',
+            ])->validate();
+        }
+
+        public function index()
         {
             try {
                 $patients = Patient::select('id', 'name', 'gender', 'birth', 'address', 'phone', 'identifier')
@@ -52,20 +68,20 @@
         {
             try {
 
-                $createData = [
+                $this->checkIdentifier($request);
+
+                Patient::create([
                     'name'       => $request->name,
-                    'role'       => $request->role,
                     'gender'     => $request->gender,
                     'birth'      => $request->birth,
                     'address'    => $request->address,
                     'phone'      => $request->phone,
-                ];
-                
-                $createData['identifier'] = $request->identifier;
-                
-                Patient::updateOrCreate(['identifier' => $request->identifier], $createData);
+                    'identifier' => $request->identifier,
+                ]);
 
-                return $this->returnCondition(true, 200, 'Successfully create data ' .  $request->role);
+                return $this->returnCondition(true, 200, 'Successfully create data ' .  $request->name);
+            }catch (ValidationException $th) {
+                return $th->validator->errors();
             }catch(Exception $e){
                 return $this->returnCondition(false, 500, 'Internal Service Error');
             }
@@ -74,7 +90,7 @@
         public function update($id, PatientRequest $request)
         {
             try {
-
+                
                 $data = Patient::where('id', $id)->first();
                 if(!$data) return $this->returnCondition(false, 404, 'Data with id ' . $id . ' not found');
                 
@@ -86,9 +102,17 @@
                     'phone'      => $request->phone,
                 ];
 
+                if($request->identifier) : 
+                    
+                    $this->checkIdentifier($request);
+                    $updateData['identifier'] = $request->identifier;
+                endif;
+
                 $data->update($updateData);
 
-                return $this->returnCondition(true, 200, 'Successfully update data ' .  $data->role);
+                return $this->returnCondition(true, 200, 'Successfully update data ' .  $data->name);
+            }catch (ValidationException $th) {
+                return $th->validator->errors();
             }catch(Exception $e){
                 return $this->returnCondition(false, 500, 'Internal Service Error');
             }

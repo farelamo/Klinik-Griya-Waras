@@ -14,14 +14,14 @@ class PatientController extends Controller
         $this->service = $service;
     }
 
-    public function index(Request $request)
+    public function index()
     {
         if(
             auth()->user()->role == 'superadmin' ||
             auth()->user()->role == 'admin'      ||
             auth()->user()->role == 'doctor'
         )
-            return $this->service->index($request);
+            return $this->service->index();
             
         return response()->json([
             'success' => false,
