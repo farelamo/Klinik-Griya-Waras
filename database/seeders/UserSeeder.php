@@ -32,11 +32,13 @@ class UserSeeder extends Seeder
             untuk keperluan custom nama tabel pivotnya sama custom nama field serta
             mengisi field timestamp (->withTimestamps())
         */
+        
         User::factory()->count(10)
             ->state(['role' => 'doctor'])
             ->hasAttached(
                 Patient::factory()->count(3),
                 [
+                    'pharmacist' => (bool) mt_rand(0, 1),
                     'complaint'  => fake()->realTextBetween(),
                     'diagnose'   => fake()->realTextBetween(),
                 ]

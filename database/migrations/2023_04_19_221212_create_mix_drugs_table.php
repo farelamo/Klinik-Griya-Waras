@@ -10,9 +10,9 @@ return new class extends Migration
     {
         Schema::create('mix_drugs', function (Blueprint $table) {
             $table->id();
-            $table->foreignId('medical_record_id')->constrained();
-            $table->foreignId('drug_id')->constrained();
-            $table->foreignId('type_concoction_id')->constrained();
+            $table->foreignId('medical_record_id')->constrained()->onDelete('cascade');
+            $table->foreignId('drug_id')->constrained()->onDelete('cascade');
+            $table->foreignId('type_concoction_id')->constrained()->onDelete('cascade');
             $table->integer('amount');
             $table->integer('times');
             $table->integer('dd');

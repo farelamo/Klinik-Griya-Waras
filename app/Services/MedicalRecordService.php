@@ -15,9 +15,8 @@
 
     class MedicalRecordService {
 
-        public function __construct(UserService $service, DrugService $drugService)
+        public function __construct(DrugService $drugService)
         {
-            $this->userService = $service;
             $this->drugService = $drugService;
         }
 
@@ -33,15 +32,12 @@
         {
             $rules = [
                 'patient_id' => 'required|exists:patients,id',
-                'doctor_id'  => 'required|exists:users,id',
             ];
 
             Validator::make($request->all(), $rules, $messages = 
             [
                 'patient_id.required' => 'patient must be filled',
                 'patient_id.exists'   => "patient doesn't exist",
-                'doctor_id.required'  => 'doctor must be filled',
-                'doctor_id.exists'    => "doctor doesn't exist",
             ])->validate();
         }
 
@@ -221,19 +217,13 @@
                 
                 if($request->mix_drugs)
                     $this->checkMixDrug($request);
-
-                $doctor = $this->userService->show($request->doctor_id);
-                if($doctor->{'role'} != 'doctor') :
-                    
-                    DB::rollback();
-                    return $this->returnCondition(false, 400, 'invalid doctor role'); 
-                endif;
                 
                 $data = MedicalRecord::create([
                     'patient_id' => $request->patient_id,
-                    'doctor_id'  => $request->doctor_id,
+                    'doctor_id'  => auth()->user()->id,
                     'complaint'  => $request->complaint,
-                    'diagnose'   => $request->diagnose
+                    'diagnose'   => $request->diagnose,
+                    'pharmacist' => 0
                 ]);
 
                 if($request->mix_drugs)
@@ -347,46 +337,6 @@
             }catch(Exception $e){
                 return $this->returnCondition(false, 500, 'Internal Server Error');
             }
-        }
-
-        public function pupu()
-        {
-            // return [
-            //     'patient_id' => $request->patient_id,
-            //     'doctor_id'  => $request->doctor_id,
-            //     'complaint'  => $request->complaint,
-            //     'diagnose'   => $request->diagnose,
-            //     'mix_drugs'  => [
-            //         [
-            //             'id'      => 10,
-            //             'amount'  => '2',
-            //             'times'   => '3',
-            //             'dd'     => '2',
-            //             'type_id' => 1,
-            //         ],
-            //         [
-            //             'id'     => 5,
-            //             'amount' => '3',
-            //             'times'  => '3',
-            //             'dd'     => '2',
-            //             'type_id' => 3,
-            //         ],
-            //     ],
-            //     'normal_drugs' => [
-            //         [
-            //             'id'     => 4,
-            //             'amount' => '1',
-            //             'times'  => '3',
-            //             'dd'     => '1',
-            //         ],
-            //         [
-            //             'id'     => 9,
-            //             'amount' => '2',
-            //             'times'  => '3',
-            //             'dd'     => '1',
-            //         ],
-            //     ]
-            // ];
         }
     }
 ?>

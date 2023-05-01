@@ -14,6 +14,7 @@ return new class extends Migration
             $table->text('description');
             $table->integer('stock')->unsigned();
             $table->timestamps();
+            $table->softDeletes();
         });
     }
 

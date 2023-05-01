@@ -13,9 +13,10 @@ return new class extends Migration
             $table->foreignId('patient_id')->constrained();
             $table->text('complaint');
             $table->unsignedBigInteger('doctor_id');
-            $table->foreign('doctor_id')->references('id')->on('users');
+            $table->foreign('doctor_id')->references('id')->on('users')->onDelete('cascade');
             $table->text('diagnose');
             $table->timestamps();
+            $table->softDeletes();
         });
     }
 

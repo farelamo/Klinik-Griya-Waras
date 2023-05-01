@@ -21,22 +21,7 @@
             ], $errorCode);
         }
 
-        public function checkIdentifier($request)
-        {
-            $rules = [
-                'identifier' => 'required|min:13|max:16|unique:patients,identifier',
-            ];
-
-            Validator::make($request->all(), $rules, $messages = 
-            [
-                'identifier.required' => 'identifier must be filled',
-                'identifier.unique'   => 'identifier has already taken',
-                'identifier.min'      => 'minimal identifier is 13 character',
-                'identifier.max'      => 'maximal identifier is 16 character',
-            ])->validate();
-        }
-
-        public function index()
+        public function index(Request $request)
         {
             try {
                 $patients = Patient::select('id', 'name', 'gender', 'birth', 'address', 'phone', 'identifier')
