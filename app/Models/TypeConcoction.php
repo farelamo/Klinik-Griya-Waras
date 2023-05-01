@@ -6,9 +6,14 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\SoftDeletes;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 
-class Drug extends Model
+class TypeConcoction extends Model
 {
     use HasFactory, SoftDeletes;
 
-    protected $fillable = ['name', 'description', 'stock'];
+    protected $fillable = ['name'];
+
+    public function drugs()
+    {
+        return $this->hasMany(Drug::class);
+    }
 }

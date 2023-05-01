@@ -13,9 +13,9 @@
 
     class MedicalRecordService {
 
-        public function __construct(UserService $service)
+        public function __construct(DrugService $drugService)
         {
-            $this->userService = $service;
+            $this->drugService = $drugService;
         }
 
         public function returnCondition($condition, $errorCode, $message)
@@ -29,16 +29,13 @@
         public function checkRole($request)
         {
             $rules = [
-                'patient_id' => 'required|exists:users,id',
-                'doctor_id'  => 'required|exists:users,id',
+                'patient_id' => 'required|exists:patients,id',
             ];
 
             Validator::make($request->all(), $rules, $messages = 
             [
                 'patient_id.required' => 'patient must be filled',
                 'patient_id.exists'   => "patient doesn't exist",
-                'doctor_id.required'  => 'doctor must be filled',
-                'doctor_id.exists'    => "doctor doesn't exist",
             ])->validate();
         }
 
@@ -75,22 +72,20 @@
             try {
                 
                 $this->checkRole($request);
-
-                $patient = $this->userService->show($request->patient_id);
-                if($patient->{'role'} != 'patient')
-                    return $this->returnCondition(false, 400, 'invalid patient role'); 
-
-                $doctor = $this->userService->show($request->doctor_id);
-                if($doctor->{'role'} != 'doctor')
-                    return $this->returnCondition(false, 400, 'invalid doctor role'); 
+                
+                if($request->normal_drugs)
+                    $this->checkNormalDrug($request);
+                
+                if($request->mix_drugs)
+                    $this->checkMixDrug($request);
                 
                 $request['drugs'] = json_encode($request->drugs);
                 $data = MedicalRecord::create([
                     'patient_id' => $request->patient_id,
+                    'doctor_id'  => auth()->user()->id,
                     'complaint'  => $request->complaint,
-                    'doctor_id'  => $request->doctor_id,
                     'diagnose'   => $request->diagnose,
-                    'drugs'      => $request->drugs
+                    'pharmacist' => 0
                 ]);
 
                 return $this->returnCondition(true, 200, 'Successfully create data');
@@ -130,6 +125,38 @@
                 $data->delete();
 
                 return $this->returnCondition(true, 200, 'Successfully delete data ' .  $data->id);
+            }catch(Exception $e){
+                return $this->returnCondition(false, 500, 'Internal Server Error');
+            }
+        }
+
+        public function receipt()
+        {
+            try {
+                
+                $medical_records = MedicalRecord::select(
+                    'id', 'patient_id', 'complaint', 'doctor_id', 
+                    'diagnose', 'drugs', 'created_at',
+                )
+                ->where('pharmacist', false)
+                ->whereRaw('date(created_at) = ?', [Carbon::now()->format('Y-m-d')])
+                ->paginate(5);
+
+                return new MedicalRecordCollection($medical_records);
+            }catch(Exception $e){
+                return $this->returnCondition(false, 500, 'Internal Server Error');
+            }
+        }
+
+        public function approvePharmacist($id)
+        {
+            try {
+
+                $data = MedicalRecord::where('id', $id)->first();
+                if(!$data) return $this->returnCondition(false, 404, 'data with id ' . $id . ' not found');
+
+                $data->update(['pharmacist' => true]);
+                return $this->returnCondition(true, 200, 'Successfully approve data ' .  $data->id);
             }catch(Exception $e){
                 return $this->returnCondition(false, 500, 'Internal Server Error');
             }
