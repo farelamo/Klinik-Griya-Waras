@@ -3,14 +3,14 @@
 namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
-use App\Services\DrugService;
-use App\Http\Requests\DrugRequest;
+use App\Services\PatientService;
+use App\Http\Requests\PatientRequest;
 
-class DrugController extends Controller
+class PatientController extends Controller
 {
-    public function __construct(DrugService $service)
+    public function __construct(PatientService $service)
     {
-        $this->middleware(['pharmacist'])->except(['index']);
+        $this->middleware('admin')->except(['index']);
         $this->service = $service;
     }
 
@@ -18,11 +18,11 @@ class DrugController extends Controller
     {
         if(
             auth()->user()->role == 'superadmin' ||
-            auth()->user()->role == 'pharmacist' ||
+            auth()->user()->role == 'admin'      ||
             auth()->user()->role == 'doctor'
         )
             return $this->service->index();
-        
+            
         return response()->json([
             'success' => false,
             'message' => 'invalid role access',
@@ -34,12 +34,12 @@ class DrugController extends Controller
         return $this->service->show($id);
     }
 
-    public function store(DrugRequest $request)
+    public function store(PatientRequest $request)
     {
         return $this->service->store($request);
     }
 
-    public function update($id, DrugRequest $request)
+    public function update($id, PatientRequest $request)
     {
         return $this->service->update($id, $request);
     }

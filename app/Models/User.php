@@ -31,13 +31,17 @@ class User extends Authenticatable implements JWTSubject
         return [];
     }
 
-    public function patientMedicalRecords()
+    public function medical_records()
     {
-        return $this->hasMany(MedicalRecords::class, 'patient_id', 'id');
+        return $this->hasMany(MedicalRecord::class, 'doctor_id', 'id');
     }
 
-    public function doctorMedicalRecords()
+    /*
+        Buat seeding (kunci seeding with relation many to many)
+        atau juga bisa dipake di service
+    */
+    public function patients()
     {
-        return $this->hasMany(MedicalRecords::class, 'doctor_id', 'id');
+        return $this->belongsToMany(Patient::class, 'medical_records', 'doctor_id', 'patient_id')->withTimestamps();
     }
 }

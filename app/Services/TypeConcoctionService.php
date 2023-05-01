@@ -2,12 +2,12 @@
     namespace App\Services;
 
     use Exception;
-    use App\Models\Drug;
-    use App\Http\Requests\DrugRequest;
+    use App\Models\TypeConcoction;
     use App\Http\Resources\BaseResource;
-    use App\Http\Resources\Drug\DrugCollection;
+    use App\Http\Requests\TypeConcoctionRequest;
+    use App\Http\Resources\TypeConcoction\TypeConcoctionCollection;
 
-    class DrugService {
+    class TypeConcoctionService {
 
         public function returnCondition($condition, $errorCode, $message)
         {
@@ -21,9 +21,9 @@
         {
             try {
 
-                $drugs = Drug::select('id', 'name', 'description', 'stock')->paginate(5);
+                $typeConcoctions = TypeConcoction::select('id', 'name')->paginate(5);
                 
-                return new DrugCollection($drugs);
+                return new TypeConcoctionCollection($typeConcoctions);
             }catch(Exception $e){
                 return $this->returnCondition(false, 500, 'Internal Server Error');
             }
@@ -33,45 +33,37 @@
         {
             try {
 
-                $drug = Drug::where('id', $id)->first();
-                if(!$drug) return $this->returnCondition(false, 404, 'data with id ' . $id . ' not found');
+                $typeConcoction = TypeConcoction::where('id', $id)->first();
+                if(!$typeConcoction) return $this->returnCondition(false, 404, 'data with id ' . $id . ' not found');
                 
-                return new BaseResource($drug);
+                return new BaseResource($typeConcoction);
             }catch(Exception $e){
                 return $this->returnCondition(false, 500, 'Internal Server Error');
             }
         }
 
-        public function store(DrugRequest $request)
+        public function store(TypeConcoctionRequest $request)
         {
             try {
 
-                $data = Drug::create([
-                    'name'        => $request->name,
-                    'description' => $request->description,
-                    'stock'       => $request->stock
-                ]);
+                $data = TypeConcoction::create(['name' => $request->name]);
                 
                 return $this->returnCondition(true, 200, 'Successfully create data ' .  $data->name);
             }catch(Exception $e){
-                return $this->returnCondition(false, 500, 'Internal Server Error');
+               return $this->returnCondition(false, 500, 'Internal Server Error');
             }
         }
 
-        public function update($id, DrugRequest $request)
+        public function update($id, TypeConcoctionRequest $request)
         {
             try {
 
-                $data = Drug::where('id', $id)->first();
+                $data = TypeConcoction::where('id', $id)->first();
                 if(!$data) return $this->returnCondition(false, 404, 'data with id ' . $id . ' not found');
                 
-                $data->update([
-                    'name'        => $request->name,
-                    'description' => $request->description,
-                    'stock'       => $request->stock
-                ]);
+                $data->update(['name' => $request->name]);
 
-                return $this->returnCondition(true, 200, 'Successfully create data ' .  $data->name);
+                return $this->returnCondition(true, 200, 'Successfully update data ' .  $data->name);
             }catch(Exception $e){
                 return $this->returnCondition(false, 500, 'Internal Server Error');
             }
@@ -80,12 +72,12 @@
         public function destroy($id)
         {
             try {
-                $data = Drug::where('id', $id)->first();
+                $data = TypeConcoction::where('id', $id)->first();
                 if(!$data) return $this->returnCondition(false, 404, 'data with id ' . $id . ' not found');
                 
                 $data->delete();
 
-                return $this->returnCondition(true, 200, 'Successfully create data ' .  $data->name);
+                return $this->returnCondition(true, 200, 'Successfully delete data ' .  $data->name);
             }catch(Exception $e){
                 return $this->returnCondition(false, 500, 'Internal Server Error');
             }

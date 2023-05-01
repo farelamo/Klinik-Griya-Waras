@@ -12,13 +12,12 @@ return new class extends Migration
             $table->id();
             $table->string('name');
             $table->string('email')->unique()->nullable();
-            $table->enum('role', ['superadmin', 'admin', 'doctor', 'patient', 'pharmacist']);
+            $table->enum('role', ['superadmin', 'admin', 'doctor', 'pharmacist']);
             $table->enum('gender', ['L', 'P']);
             $table->date('birth');
             $table->text('address');
             $table->string('phone', 13);
             $table->text('password')->nullable();
-            $table->string('identifier', 16)->nullable();
             $table->timestamps();
             $table->softDeletes();
         });

@@ -3,12 +3,12 @@
 namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
-use App\Services\DrugService;
-use App\Http\Requests\DrugRequest;
+use App\Services\TypeConcoctionService;
+use App\Http\Requests\TypeConcoctionRequest;
 
-class DrugController extends Controller
+class TypeConcoctionController extends Controller
 {
-    public function __construct(DrugService $service)
+    public function __construct(TypeConcoctionService $service)
     {
         $this->middleware(['pharmacist'])->except(['index']);
         $this->service = $service;
@@ -34,12 +34,12 @@ class DrugController extends Controller
         return $this->service->show($id);
     }
 
-    public function store(DrugRequest $request)
+    public function store(TypeConcoctionRequest $request)
     {
         return $this->service->store($request);
     }
 
-    public function update($id, DrugRequest $request)
+    public function update($id, TypeConcoctionRequest $request)
     {
         return $this->service->update($id, $request);
     }

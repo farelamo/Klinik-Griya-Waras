@@ -9,7 +9,7 @@ class DrugFactory extends Factory
     public function definition(): array
     {
         return [
-            'name'        => fake()->firstName(),
+            'name'        => $this->faker->word(),
             'description' => fake()->realTextBetween(),
             'stock'       => rand(100, 1000),  
         ];
