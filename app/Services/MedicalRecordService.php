@@ -10,6 +10,7 @@
     use Illuminate\Support\Facades\Validator;
     use App\Http\Requests\MedicalRecordRequest;
     use Illuminate\Validation\ValidationException;
+    use App\Http\Resources\Receipt\ReceiptCollection;
     use App\Http\Resources\MedicalRecord\MedicalRecordResource;
     use App\Http\Resources\MedicalRecord\MedicalRecordCollection;
 
@@ -312,14 +313,18 @@
             try {
                 
                 $medical_records = MedicalRecord::select(
-                    'id', 'patient_id', 'complaint', 'doctor_id', 
-                    'diagnose', 'drugs', 'created_at',
+                    'id', 'patient_id', 'complaint', 'doctor_id', 'diagnose', 'created_at',
                 )
                 ->where('pharmacist', false)
+                ->whereHas('patient')
+                ->whereHas('doctor')
+                ->with('mix_drugs', function($m){
+                    $m->whereHas('type_concoctions');
+                })
                 ->whereRaw('date(created_at) = ?', [Carbon::now()->format('Y-m-d')])
                 ->paginate(5);
 
-                return new MedicalRecordCollection($medical_records);
+                return new ReceiptCollection($medical_records);
             }catch(Exception $e){
                 return $this->returnCondition(false, 500, 'Internal Server Error');
             }

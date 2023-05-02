@@ -26,14 +26,14 @@ class MedicalRecord extends Model
     public function normal_drugs()
     {
         return $this->belongsToMany(Drug::class, 'normal_drugs')
-                    ->withPivot('amount', 'times', 'dd', 'drug_id', 'deleted_at')
+                    ->withPivot('amount', 'times', 'dd', 'drug_id')
                     ->withTimestamps();
     }
 
     public function mix_drugs()
     {
         return $this->belongsToMany(Drug::class, 'mix_drugs')
-                    ->withPivot('amount', 'times', 'dd', 'drug_id', 'type_concoction_id', 'deleted_at')
+                    ->withPivot('amount', 'times', 'dd', 'drug_id', 'type_concoction_id')
                     ->withTimestamps();
     }
 
