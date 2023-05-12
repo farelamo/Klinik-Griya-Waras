@@ -85,7 +85,7 @@
                 
                 $data->delete();
 
-                return $this->returnCondition(true, 200, 'Successfully create data ' .  $data->name);
+                return $this->returnCondition(true, 200, 'Successfully delete data ' .  $data->name);
             }catch(Exception $e){
                 return $this->returnCondition(false, 500, 'Internal Server Error');
             }
