@@ -21,7 +21,7 @@
             ], $errorCode);
         }
 
-        public function index(Request $request)
+        public function index()
         {
             try {
                 $patients = Patient::select('id', 'name', 'gender', 'birth', 'address', 'phone', 'identifier')

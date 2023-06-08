@@ -29,7 +29,7 @@
             ], $errorCode);
         }
 
-        public function checkRole($request)
+        public function checkPatient($request)
         {
             $rules = [
                 'patient_id' => 'required|exists:patients,id',
@@ -171,7 +171,7 @@
             
             foreach($request as $drug){
                 
-                $recentStock      = $this->drugService->show($drug['id'])->stock;
+                $recentStock = $this->drugService->show($drug['id'])->stock;
                 
                 if($updateNormal):
 
@@ -211,7 +211,7 @@
 
                 DB::beginTransaction();
                 
-                $this->checkRole($request);
+                $this->checkPatient($request);
                 
                 if($request->normal_drugs)
                     $this->checkNormalDrug($request);
