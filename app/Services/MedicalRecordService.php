@@ -195,13 +195,13 @@
                 endif;
             }
 
+            
             $ids   = implode(',', $ids);
             $cases = implode(' ', $cases);
             
             if (!empty($ids)) {
                 \DB::update("UPDATE drugs SET `stock` = CASE `id` {$cases} END WHERE `id` in ({$ids})", $params);
             }
-            
             return $result;
         }
 
