@@ -21,6 +21,18 @@
             ], $errorCode);
         }
 
+        public function checkIdentifier($request) {
+            $rules = [
+                'identifier' => 'required|max:16',
+            ];
+
+            Validator::make($request->all(), $rules, $messages = 
+            [
+                'identifier.required' => 'patient must be filled',
+                'identifier.max'      => 'maximal identifier is 16 character',
+            ])->validate();
+        }
+
         public function index()
         {
             try {
