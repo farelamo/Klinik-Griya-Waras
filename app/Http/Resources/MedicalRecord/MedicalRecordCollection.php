@@ -34,7 +34,7 @@ class MedicalRecordCollection extends ResourceCollection
                                                 'dd'        => $m->pivot->dd,
                                                 'type'      => $m->type_concoctions()
                                                                  ->wherePivot('medical_record_id', $data->id)
-                                                                 ->first()->name,
+                                                                 ->first()->name ?? null,
                                             ];
                                        }),
                     'date'          => date('Y-m-d', strtotime($data->created_at)),
