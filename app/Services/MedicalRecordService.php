@@ -98,7 +98,10 @@
                 $medical_records = MedicalRecord::select(
                         'id', 'patient_id', 'complaint', 'doctor_id', 
                         'diagnose', 'created_at',
-                    ) ->paginate(5);
+                    )
+                    ->has('patient')
+                    ->has('doctor')
+                    ->paginate(5);
 
                 return new MedicalRecordCollection($medical_records);
             }catch(Exception $e){
