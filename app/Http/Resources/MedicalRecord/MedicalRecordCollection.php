@@ -27,14 +27,18 @@ class MedicalRecordCollection extends ResourceCollection
                                             ];
                                        }),
                     'mix_drugs'     => $data->mix_drugs->map(function ($m) use ($data){
-                                            return [
-                                                'name'      => $m->name,
-                                                'amount'    => $m->pivot->amount,
-                                                'times'     => $m->pivot->times,
-                                                'dd'        => $m->pivot->dd,
-                                                'type'      => $m->type_concoctions()
+                                            $type_concoction = $m->type_concoctions()
                                                                  ->wherePivot('medical_record_id', $data->id)
-                                                                 ->first()->name ?? null,
+                                                                 ->first();
+                                            return [
+                                                'name'               => $m->name,
+                                                'amount'             => $m->pivot->amount,
+                                                'times'              => $m->pivot->times,
+                                                'dd'                 => $m->pivot->dd,
+                                                'type_concoction_id' => [
+                                                                            'id'   => $type_concoction->id,
+                                                                            'name' => $type_concoction->name,
+                                                                        ]
                                             ];
                                        }),
                     'date'          => date('Y-m-d', strtotime($data->created_at)),

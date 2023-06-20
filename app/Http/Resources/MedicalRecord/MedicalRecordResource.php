@@ -9,7 +9,6 @@ class MedicalRecordResource extends JsonResource
 {
     public function toArray(Request $request): array
     {
-        
         return [
             'status' => 'success',
             'data'   => [
@@ -29,15 +28,18 @@ class MedicalRecordResource extends JsonResource
                                         ];
                                     }),
                 'mix_drugs'     => $this->mix_drugs->map(function ($m){
-                                        return [
-                                            'id'        => $m->id,
-                                            'name'      => $m->name,
-                                            'amount'    => $m->pivot->amount,
-                                            'times'     => $m->pivot->times,
-                                            'dd'        => $m->pivot->dd,
-                                            'type'      => $m->type_concoctions()
+
+                                        $type_concoction = $m->type_concoctions()
                                                              ->wherePivot('medical_record_id', $this->id)
-                                                             ->first()->name,
+                                                             ->first();
+
+                                        return [
+                                            'id'                 => $m->id,
+                                            'name'               => $m->name,
+                                            'amount'             => $m->pivot->amount,
+                                            'times'              => $m->pivot->times,
+                                            'dd'                 => $m->pivot->dd,
+                                            'type_concoction_id' => $type_concoction->id
                                         ];
                                     }),
                 'date'          => date('Y-m-d', strtotime($this->created_at)),
