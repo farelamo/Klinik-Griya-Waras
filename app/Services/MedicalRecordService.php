@@ -202,7 +202,11 @@
 
                     $oldAmount = $data->normal_drugs()->wherePivot('drug_id', $drug['id'])->first()->pivot->amount;
                     $this->handleQueryDrug($drug, $oldAmount, $recentStock, $cases, $params, $ids);
-                    $data->normal_drugs()->updateExistingPivot($drug['id'], ['amount' => $drug['amount']]);
+                    $data->normal_drugs()->updateExistingPivot($drug['id'], [
+                        'amount' => $drug['amount'],
+                        'times'  => $drug['times'],
+                        'dd'     => $drug['dd'],
+                    ]);
                 endif;
 
                 if(!$updateNormal):
