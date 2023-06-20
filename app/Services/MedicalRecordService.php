@@ -35,7 +35,7 @@
                 'patient_id' => 'required|exists:patients,id',
             ];
 
-            Validator::make($request->all(), $rules, $messages = 
+            Validator::make($request->all(), $rules, $messages =
             [
                 'patient_id.required' => 'patient must be filled',
                 'patient_id.exists'   => "patient doesn't exist",
@@ -52,7 +52,7 @@
                 'normal_drugs.*.dd'       => 'required|numeric',
             ];
 
-            Validator::make($request->all(), $rules, $messages = 
+            Validator::make($request->all(), $rules, $messages =
             [
                 'normal_drugs.required'         => 'normal drugs must be filled',
                 'normal_drugs.array'            => 'normal drugs must be type of array',
@@ -76,7 +76,7 @@
                 'mix_drugs.*.type_concoction_id'  => 'required|exists:type_concoctions,id',
             ];
 
-            Validator::make($request->all(), $rules, $messages = 
+            Validator::make($request->all(), $rules, $messages =
             [
                 'mix_drugs.array'                         => 'mix drugs must be type of array',
                 'mix_drugs.required'                      => 'mix drugs must be filled',
@@ -96,7 +96,7 @@
             try {
 
                 $medical_records = MedicalRecord::select(
-                        'id', 'patient_id', 'complaint', 'doctor_id', 
+                        'id', 'patient_id', 'complaint', 'doctor_id',
                         'diagnose', 'created_at',
                     )
                     ->has('patient')
@@ -129,79 +129,93 @@
             $ids[]     = $drug['id'];
         }
 
-        public function handleResultDrug(&$result, $drug)
+        public function handleResultDrug($type, &$result, $drug)
         {
-            $id = $drug['id'];
-            array_shift($drug);
-            
-            return $result['attach'][$id] = $drug;
+            $id      = $drug['id'];
+            $newDrug = [
+                'amount' => $drug['amount'],
+                'times'  => $drug['times'],
+                'dd'     => $drug['dd'],
+            ];
+
+            if(!$type)
+                $newDrug['type_concoction_id'] = $drug['type_concoction_id'];
+
+            return $result['attach'][$id] = $newDrug;
         }
 
-        public function handleDrugs($request, $data = null, $updateNormal = false)
+        public function handleDrugs($type, $request, $data = null, $updateNormal = false)
         {
-            $result          = [];
-            
-            $cases           = [];
-            $params          = [];
-            $ids             = [];
-            
+            $result = [];
+
+            $cases  = [];
+            $params = [];
+            $ids    = [];
+
             $oldNormal = $updateNormal ? $data->normal_drugs->map(function ($n){
                             return $n->id;
                         })->toArray()
                         : 0;
-                        
+
             $requestId = $updateNormal ? array_column($request, 'id') : 0;
             $detachOld = $updateNormal ? array_diff($oldNormal, $requestId) : [];
             $attachNew = $updateNormal ? array_diff($requestId, $oldNormal) : [];
 
+            // return [
+            //     'old_normal' => $oldNormal,
+            //     'request_id' => $requestId,
+            //     'detach_old' => $detachOld,
+            //     'attach_new' => $attachNew,
+            // ];
+
             if($updateNormal):
                 if(!empty($detachOld)):
-                        
+
                     $result['detach'] = [];
-                    
+
                     foreach ($detachOld as $id) {
-                        
+
                         $recentStock = $this->drugService->show($id)->stock;
-                        
+
                         $drug      = ['id' => $id,'amount' => 0];
                         $oldAmount = $data->normal_drugs()->wherePivot('drug_id', $id)->first()->pivot->amount;
-                        
+
                         $this->handleQueryDrug($drug, $oldAmount, $recentStock, $cases, $params, $ids);
                         array_push($result['detach'], $id);
                     }
                 endif;
             endif;
-            
+
             foreach($request as $drug){
-                
+
                 $recentStock = $this->drugService->show($drug['id'])->stock;
-                
+
                 if($updateNormal):
 
                     if(in_array($drug['id'], $attachNew)) :
-                        
+
                         $this->handleQueryDrug($drug, 0, $recentStock, $cases, $params, $ids);
-                        $this->handleResultDrug($result, $drug);
+                        $this->handleResultDrug($type, $result, $drug);
 
                         continue;
                     endif;
-                    
+
                     $oldAmount = $data->normal_drugs()->wherePivot('drug_id', $drug['id'])->first()->pivot->amount;
                     $this->handleQueryDrug($drug, $oldAmount, $recentStock, $cases, $params, $ids);
                     $data->normal_drugs()->updateExistingPivot($drug['id'], ['amount' => $drug['amount']]);
                 endif;
 
                 if(!$updateNormal):
-                    
+
                     $this->handleQueryDrug($drug, 0, $recentStock, $cases, $params, $ids);
-                    $this->handleResultDrug($result, $drug);
+                    $this->handleResultDrug($type, $result, $drug);
                 endif;
             }
 
-            
+
             $ids   = implode(',', $ids);
             $cases = implode(' ', $cases);
-            
+
             if (!empty($ids)) {
                 \DB::update("UPDATE drugs SET `stock` = CASE `id` {$cases} END WHERE `id` in ({$ids})", $params);
             }
@@ -213,15 +227,15 @@
             try {
 
                 DB::beginTransaction();
-                
+
                 $this->checkPatient($request);
-                
+
                 if($request->normal_drugs)
                     $this->checkNormalDrug($request);
-                
+
                 if($request->mix_drugs)
                     $this->checkMixDrug($request);
-                
+
                 $data = MedicalRecord::create([
                     'patient_id' => $request->patient_id,
                     'doctor_id'  => auth()->user()->id,
@@ -231,11 +245,11 @@
                 ]);
 
                 if($request->mix_drugs)
-                    $data->mix_drugs()->attach($this->handleDrugs($request->mix_drugs, null)['attach']);
-                
+                    $data->mix_drugs()->attach($this->handleDrugs(false, $request->mix_drugs, null)['attach']);
+
                 if($request->normal_drugs)
-                    $data->normal_drugs()->attach($this->handleDrugs($request->normal_drugs, null)['attach']);
-                
+                    $data->normal_drugs()->attach($this->handleDrugs(true, $request->normal_drugs, null)['attach']);
+
                 DB::commit();
                 return $this->returnCondition(true, 200, 'Successfully create data');
             }catch (ValidationException $th) {
@@ -250,37 +264,38 @@
         public function update($id, MedicalRecordRequest $request)
         {
             try {
-                
+
                 DB::beginTransaction();
-                
+
                 if($request->normal_drugs)
                     $this->checkNormalDrug($request);
-                
+
                 if($request->mix_drugs)
                     $this->checkMixDrug($request);
-                    
+
                 $data = MedicalRecord::where('id', $id)->first();
                 if(!$data) return $this->returnCondition(false, 404, 'data with id ' . $id . ' not found');
-                
+
+                // return $this->handleDrugs(true, $request->normal_drugs, $data, true);
+
                 $data->update([
                     'complaint' => $request->complaint,
                     'diagnose'  => $request->diagnose,
                 ]);
 
-                
-                if($request->normal_drugs) :
-                    
-                    $result = $this->handleDrugs($request->normal_drugs, $data, true);       
-                    if(array_key_exists('attach', $result)) $data->normal_drugs()->attach($result['attach']);  
-                    if(array_key_exists('detach', $result)) $data->normal_drugs()->detach($result['detach']);        
+                if($request->has('normal_drugs')) :
+
+                    $result = $this->handleDrugs(true, $request->normal_drugs, $data, true);
+                    if(array_key_exists('attach', $result)) $data->normal_drugs()->attach($result['attach']);
+                    if(array_key_exists('detach', $result)) $data->normal_drugs()->detach($result['detach']);
                 endif;
-                
-                if($request->mix_drugs) :
-                
-                    $result = $this->handleDrugs($request->mix_drugs, null);
-                    if(array_key_exists('attach', $result)) $data->mix_drugs()->sync($result['attach']);        
+
+                if($request->has('mix_drugs')) :
+
+                    $result = $this->handleDrugs(false, $request->mix_drugs, null);
+                    $data->mix_drugs()->sync($result['attach'] ?? []);
                 endif;
-                
+
                 DB::commit();
                 return $this->returnCondition(true, 200, 'Successfully update data ' .  $data->id);
             }catch (ValidationException $th) {
@@ -297,7 +312,7 @@
             try {
 
                 DB::beginTransaction();
-                
+
                 $data = MedicalRecord::where('id', $id)->first();
                 if(!$data) return $this->returnCondition(false, 404, 'data with id ' . $id . ' not found');
 
@@ -314,7 +329,7 @@
         public function receipt()
         {
             try {
-                
+
                 $medical_records = MedicalRecord::select(
                     'id', 'patient_id', 'complaint', 'doctor_id', 'diagnose', 'created_at',
                 )
