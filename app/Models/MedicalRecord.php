@@ -26,14 +26,14 @@ class MedicalRecord extends Model
     public function normal_drugs()
     {
         return $this->belongsToMany(Drug::class, 'normal_drugs')
-                    ->withPivot('amount', 'times', 'dd', 'drug_id')
+                    ->withPivot('amount', 'times', 'dd', 'dose', 'drug_id', 'type_concoction_id')
                     ->withTimestamps();
     }
 
     public function mix_drugs()
     {
         return $this->belongsToMany(Drug::class, 'mix_drugs')
-                    ->withPivot('amount', 'times', 'dd', 'drug_id', 'type_concoction_id')
+                    ->withPivot('amount', 'times', 'dd', 'dose', 'drug_id', 'type_concoction_id')
                     ->withTimestamps();
     }
 
@@ -45,9 +45,9 @@ class MedicalRecord extends Model
 
     //         $mix    = $medical_record->mix_drugs()->get();
     //         $normal = $medical_record->normal_drugs()->get();
-            
+
     //         if(!empty($mix->toArray())):
-                
+
     //             foreach ($mix as $data) {
     //                 $medical_record->mix_drugs()->updateExistingPivot(
     //                     $data->id, ['deleted_at' => Carbon::now()]
@@ -56,7 +56,7 @@ class MedicalRecord extends Model
     //         endif;
 
     //         if(!empty($normal->toArray())):
-                
+
     //             foreach ($normal as $data) {
     //                 $medical_record->normal_drugs()->updateExistingPivot(
     //                     $data->id, ['deleted_at' => Carbon::now()]

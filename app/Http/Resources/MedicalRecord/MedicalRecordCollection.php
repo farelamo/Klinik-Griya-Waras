@@ -14,20 +14,29 @@ class MedicalRecordCollection extends ResourceCollection
             'data'    => $this->collection->transform(function ($data) {
                 return [
                     'id'            => $data->id,
+                    'identifier'    => $data->patient->identifier,
                     'patient_id'    => $data->patient->name,
                     'complaint'     => $data->complaint,
                     'doctor_id'     => $data->doctor->name,
                     'diagnose'      => $data->diagnose,
-                    'normal_drugs'  => $data->normal_drugs->map(function ($n){
+                    'normal_drugs'  => $data->normal_drugs->map(function ($n) use ($data){
+                                            $type_concoction = $n->normal_type_concoctions()
+                                                                 ->wherePivot('medical_record_id', $data->id)
+                                                                 ->first();
                                             return [
                                                 'name'   => $n->name,
                                                 'amount' => $n->pivot->amount,
                                                 'times'  => $n->pivot->times,
                                                 'dd'     => $n->pivot->dd,
+                                                'dose'   => $n->pivot->dose,
+                                                'type_concoction_id' => [
+                                                        'id'   => $type_concoction->id ?? null,
+                                                        'name' => $type_concoction->name ?? null,
+                                                ]
                                             ];
                                        }),
                     'mix_drugs'     => $data->mix_drugs->map(function ($m) use ($data){
-                                            $type_concoction = $m->type_concoctions()
+                                            $type_concoction = $m->mix_type_concoctions()
                                                                  ->wherePivot('medical_record_id', $data->id)
                                                                  ->first();
                                             return [
@@ -35,9 +44,10 @@ class MedicalRecordCollection extends ResourceCollection
                                                 'amount'             => $m->pivot->amount,
                                                 'times'              => $m->pivot->times,
                                                 'dd'                 => $m->pivot->dd,
+                                                'dose'               => $m->pivot->dose,
                                                 'type_concoction_id' => [
-                                                                            'id'   => $type_concoction->id,
-                                                                            'name' => $type_concoction->name,
+                                                                            'id'   => $type_concoction->id ?? null,
+                                                                            'name' => $type_concoction->name ?? null,
                                                                         ]
                                             ];
                                        }),
