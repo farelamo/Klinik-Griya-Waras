@@ -2,6 +2,7 @@
     namespace App\Services;
 
     use Exception;
+    use Carbon\Carbon;
     use App\Models\Drug;
     use App\Models\User;
     use App\Models\Patient;
@@ -16,7 +17,7 @@
                 'message' => $message,
             ], $errorCode);
         }
-        
+
         public function index()
         {
             try {
@@ -24,8 +25,20 @@
                 $countPatient     = Patient::count();
                 $countDoctor      = User::where('role', 'doctor')->count();
                 $countAdmin       = User::where('role', 'admin')->count();
-                
-                $patients         = Patient::select('id', 'name', 'gender')
+                $countReceipt     = MedicalRecord::select(
+                                                'id', 'patient_id', 'complaint', 'doctor_id',
+                                                'diagnose', 'created_at',
+                                            )
+                                            ->where('pharmacist', false)
+                                            ->whereHas('patient')
+                                            ->whereHas('doctor')
+                                            ->with('mix_drugs', function($m){
+                                                $m->whereHas('type_concoctions');
+                                            })
+                                            ->whereRaw('date(created_at) = ?', [Carbon::now()->format('Y-m-d')])
+                                            ->count();
+
+                $patients         = Patient::select('id', 'name', 'gender', 'identifier')
                                             ->orderBy('id', 'desc')
                                             ->limit(5)
                                             ->get();
@@ -42,11 +55,12 @@
 
                 $medical_records = $medical_records->map(function($m){
                     return [
-                        'id'        => $m->id,
-                        'patient'   => $m->patient->name,
-                        'doctor'    => $m->doctor->name,
-                        'complaint' => $m->complaint,
-                        'diagnose'  => $m->diagnose,
+                        'id'         => $m->id,
+                        'identifier' => $m->patient->identifier,
+                        'patient'    => $m->patient->name,
+                        'doctor'     => $m->doctor->name,
+                        'complaint'  => $m->complaint,
+                        'diagnose'   => $m->diagnose,
                     ];
                 });
 
@@ -56,6 +70,7 @@
                         'count_patient'    => $countPatient,
                         'count_doctor'     => $countDoctor,
                         'count_admin'      => $countAdmin,
+                        'count_receipt'    => $countReceipt,
                         'patients'         => $patients,
                         'drugs'            => $drugs,
                         'medical_records'  => $medical_records,

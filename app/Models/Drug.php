@@ -26,10 +26,17 @@ class Drug extends Model
                     ->withTimestamps();
     }
 
-    public function type_concoctions()
+    public function mix_type_concoctions()
     {
         return $this->belongsToMany(TypeConcoction::class, 'mix_drugs')
-                    ->withPivot('amount', 'times', 'dd', 'medical_record_id', 'type_concoction_id')
+                    ->withPivot('amount', 'times', 'dd', 'dose', 'medical_record_id', 'type_concoction_id')
+                    ->withTimestamps();
+    }
+
+    public function normal_type_concoctions()
+    {
+        return $this->belongsToMany(TypeConcoction::class, 'normal_drugs')
+                    ->withPivot('amount', 'times', 'dd', 'dose', 'medical_record_id', 'type_concoction_id')
                     ->withTimestamps();
     }
 }

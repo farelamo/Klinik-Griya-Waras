@@ -15,6 +15,7 @@ return new class extends Migration
             $table->unsignedBigInteger('doctor_id');
             $table->foreign('doctor_id')->references('id')->on('users')->onDelete('cascade');
             $table->text('diagnose');
+            $table->boolean('pharmacist');
             $table->timestamps();
             $table->softDeletes();
         });

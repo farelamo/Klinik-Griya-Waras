@@ -17,12 +17,16 @@ class ReceiptCollection extends ResourceCollection
                     'patient_id'    => $data->patient->name,
                     'doctor_id'     => $data->doctor->name,
                     'diagnose'      => $data->diagnose,
-                    'normal_drugs'  => $data->normal_drugs->map(function ($n){
+                    'normal_drugs'  => $data->normal_drugs->map(function ($n) use ($data){
                                             return [
                                                 'name'   => $n->name,
                                                 'amount' => $n->pivot->amount,
                                                 'times'  => $n->pivot->times,
                                                 'dd'     => $n->pivot->dd,
+                                                'dose'   => $n->pivot->dose,
+                                                'type'   => $n->normal_type_concoctions()
+                                                                 ->wherePivot('medical_record_id', $data->id)
+                                                                 ->first()->name,
                                             ];
                                        }),
                     'mix_drugs'     => $data->mix_drugs->map(function ($m) use ($data){
@@ -31,7 +35,8 @@ class ReceiptCollection extends ResourceCollection
                                                 'amount'    => $m->pivot->amount,
                                                 'times'     => $m->pivot->times,
                                                 'dd'        => $m->pivot->dd,
-                                                'type'      => $m->type_concoctions()
+                                                'dose'      => $m->pivot->dose,
+                                                'type'      => $m->mix_type_concoctions()
                                                                  ->wherePivot('medical_record_id', $data->id)
                                                                  ->first()->name,
                                             ];

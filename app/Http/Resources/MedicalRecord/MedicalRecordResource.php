@@ -19,17 +19,22 @@ class MedicalRecordResource extends JsonResource
                 'diagnose'      => $this->diagnose,
                 'diagnose'      => $this->diagnose,
                 'normal_drugs'  => $this->normal_drugs->map(function ($n){
+                                        $type_concoction = $n->normal_type_concoctions()
+                                                             ->wherePivot('medical_record_id', $this->id)
+                                                             ->first();
                                         return [
                                             'id'     => $n->id,
                                             'name'   => $n->name,
                                             'amount' => $n->pivot->amount,
                                             'times'  => $n->pivot->times,
                                             'dd'     => $n->pivot->dd,
+                                            'dose'   => $n->pivot->dose,
+                                            'type_concoction_id' => $type_concoction->id ?? null
                                         ];
                                     }),
                 'mix_drugs'     => $this->mix_drugs->map(function ($m){
 
-                                        $type_concoction = $m->type_concoctions()
+                                        $type_concoction = $m->mix_type_concoctions()
                                                              ->wherePivot('medical_record_id', $this->id)
                                                              ->first();
 
@@ -39,7 +44,8 @@ class MedicalRecordResource extends JsonResource
                                             'amount'             => $m->pivot->amount,
                                             'times'              => $m->pivot->times,
                                             'dd'                 => $m->pivot->dd,
-                                            'type_concoction_id' => $type_concoction->id
+                                            'dose'               => $m->pivot->dose,
+                                            'type_concoction_id' => $type_concoction->id ?? null
                                         ];
                                     }),
                 'date'          => date('Y-m-d', strtotime($this->created_at)),

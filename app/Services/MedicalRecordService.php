@@ -45,23 +45,29 @@
         public function checkNormalDrug($request)
         {
             $rules = [
-                'normal_drugs'            => 'required|array',
-                'normal_drugs.*.id'       => 'required|exists:drugs,id',
-                'normal_drugs.*.amount'   => 'required|numeric',
-                'normal_drugs.*.times'    => 'required|numeric',
-                'normal_drugs.*.dd'       => 'required|numeric',
+                'normal_drugs'                       => 'required|array',
+                'normal_drugs.*.id'                  => 'required|exists:drugs,id',
+                'normal_drugs.*.amount'              => 'required|numeric',
+                'normal_drugs.*.times'               => 'required|numeric',
+                'normal_drugs.*.dd'                  => 'required|numeric',
+                'normal_drugs.*.dose'                => 'required|string',
+                'normal_drugs.*.type_concoction_id'  => 'required|exists:type_concoctions,id',
             ];
 
             Validator::make($request->all(), $rules, $messages =
             [
-                'normal_drugs.required'         => 'normal drugs must be filled',
-                'normal_drugs.array'            => 'normal drugs must be type of array',
-                'normal_drugs.*.id.required'    => 'normal drugs id must be filled',
-                'normal_drugs.*.id.exists'      => "normal drugs id doesn't exist",
-                'normal_drugs.*.times.required' => 'normal drugs times must be filled',
-                'normal_drugs.*.times.numeric'  => 'normal drugs times must be numeric',
-                'normal_drugs.*.dd.required'    => 'normal drugs dd must be filled',
-                'normal_drugs.*.dd.exists'      => "normal drugs dd must be numeric",
+                'normal_drugs.required'                      => 'normal drugs must be filled',
+                'normal_drugs.array'                         => 'normal drugs must be type of array',
+                'normal_drugs.*.id.required'                 => 'normal drugs id must be filled',
+                'normal_drugs.*.id.exists'                   => "normal drugs id doesn't exist",
+                'normal_drugs.*.times.required'              => 'normal drugs times must be filled',
+                'normal_drugs.*.times.numeric'               => 'normal drugs times must be numeric',
+                'normal_drugs.*.dd.required'                 => 'normal drugs dd must be filled',
+                'normal_drugs.*.dd.numeric'                  => "normal drugs dd must be numeric",
+                'normal_drugs.*.dose.required'               => 'normal drugs dose must be filled',
+                'normal_drugs.*.dose.string'                 => "normal drugs dose must be string",
+                'normal_drugs.*.type_concoction_id.required' => 'normal drugs type concoction must be filled',
+                'normal_drugs.*.type_concoction_id.exists'   => "normal drugs type concoction doesn't exist",
             ])->validate();
         }
 
@@ -73,6 +79,7 @@
                 'mix_drugs.*.amount'              => 'required|numeric',
                 'mix_drugs.*.times'               => 'required|numeric',
                 'mix_drugs.*.dd'                  => 'required|numeric',
+                'mix_drugs.*.dose'                => 'required|string',
                 'mix_drugs.*.type_concoction_id'  => 'required|exists:type_concoctions,id',
             ];
 
@@ -85,7 +92,9 @@
                 'mix_drugs.*.times.required'              => 'mix drugs times must be filled',
                 'mix_drugs.*.times.numeric'               => 'mix drugs times must be numeric',
                 'mix_drugs.*.dd.required'                 => 'mix drugs dd must be filled',
-                'mix_drugs.*.dd.exists'                   => "mix drugs dd must be numeric",
+                'mix_drugs.*.dd.numeric'                  => "mix drugs dd must be numeric",
+                'mix_drugs.*.dose.required'               => 'mix drugs dose must be filled',
+                'mix_drugs.*.dose.string'                 => "mix drugs dose must be string",
                 'mix_drugs.*.type_concoction_id.required' => 'mix drugs type concoction must be filled',
                 'mix_drugs.*.type_concoction_id.exists'   => "mix drugs type concoction doesn't exist",
             ])->validate();
@@ -101,6 +110,7 @@
                     )
                     ->has('patient')
                     ->has('doctor')
+                    ->latest()
                     ->paginate(5);
 
                 return new MedicalRecordCollection($medical_records);
@@ -129,22 +139,21 @@
             $ids[]     = $drug['id'];
         }
 
-        public function handleResultDrug($type, &$result, $drug)
+        public function handleResultDrug(&$result, $drug)
         {
             $id      = $drug['id'];
             $newDrug = [
-                'amount' => $drug['amount'],
-                'times'  => $drug['times'],
-                'dd'     => $drug['dd'],
+                'amount'             => $drug['amount'],
+                'times'              => $drug['times'],
+                'dd'                 => $drug['dd'],
+                'dose'               => $drug['dose'],
+                'type_concoction_id' => $drug['type_concoction_id'],
             ];
-
-            if(!$type)
-                $newDrug['type_concoction_id'] = $drug['type_concoction_id'];
 
             return $result['attach'][$id] = $newDrug;
         }
 
-        public function handleDrugs($type, $request, $data = null, $updateNormal = false)
+        public function handleDrugs($request, $data = null, $updateNormal = false)
         {
             $result = [];
 
@@ -160,13 +169,6 @@
             $requestId = $updateNormal ? array_column($request, 'id') : 0;
             $detachOld = $updateNormal ? array_diff($oldNormal, $requestId) : [];
             $attachNew = $updateNormal ? array_diff($requestId, $oldNormal) : [];
-
-            // return [
-            //     'old_normal' => $oldNormal,
-            //     'request_id' => $requestId,
-            //     'detach_old' => $detachOld,
-            //     'attach_new' => $attachNew,
-            // ];
 
             if($updateNormal):
                 if(!empty($detachOld)):
@@ -195,7 +197,7 @@
                     if(in_array($drug['id'], $attachNew)) :
 
                         $this->handleQueryDrug($drug, 0, $recentStock, $cases, $params, $ids);
-                        $this->handleResultDrug($type, $result, $drug);
+                        $this->handleResultDrug($result, $drug);
 
                         continue;
                     endif;
@@ -203,16 +205,18 @@
                     $oldAmount = $data->normal_drugs()->wherePivot('drug_id', $drug['id'])->first()->pivot->amount;
                     $this->handleQueryDrug($drug, $oldAmount, $recentStock, $cases, $params, $ids);
                     $data->normal_drugs()->updateExistingPivot($drug['id'], [
-                        'amount' => $drug['amount'],
-                        'times'  => $drug['times'],
-                        'dd'     => $drug['dd'],
+                        'amount'              => $drug['amount'],
+                        'times'               => $drug['times'],
+                        'dd'                  => $drug['dd'],
+                        'dose'                => $drug['dose'],
+                        'type_concoction_id'  => $drug['type_concoction_id'],
                     ]);
                 endif;
 
                 if(!$updateNormal):
 
                     $this->handleQueryDrug($drug, 0, $recentStock, $cases, $params, $ids);
-                    $this->handleResultDrug($type, $result, $drug);
+                    $this->handleResultDrug($result, $drug);
                 endif;
             }
 
@@ -249,10 +253,10 @@
                 ]);
 
                 if($request->mix_drugs)
-                    $data->mix_drugs()->attach($this->handleDrugs(false, $request->mix_drugs, null)['attach']);
+                    $data->mix_drugs()->attach($this->handleDrugs($request->mix_drugs, null)['attach']);
 
                 if($request->normal_drugs)
-                    $data->normal_drugs()->attach($this->handleDrugs(true, $request->normal_drugs, null)['attach']);
+                    $data->normal_drugs()->attach($this->handleDrugs($request->normal_drugs, null)['attach']);
 
                 DB::commit();
                 return $this->returnCondition(true, 200, 'Successfully create data');
@@ -289,14 +293,14 @@
 
                 if($request->has('normal_drugs')) :
 
-                    $result = $this->handleDrugs(true, $request->normal_drugs, $data, true);
+                    $result = $this->handleDrugs($request->normal_drugs, $data, true);
                     if(array_key_exists('attach', $result)) $data->normal_drugs()->attach($result['attach']);
                     if(array_key_exists('detach', $result)) $data->normal_drugs()->detach($result['detach']);
                 endif;
 
                 if($request->has('mix_drugs')) :
 
-                    $result = $this->handleDrugs(false, $request->mix_drugs, null);
+                    $result = $this->handleDrugs($request->mix_drugs, null);
                     $data->mix_drugs()->sync($result['attach'] ?? []);
                 endif;
 
@@ -340,8 +344,12 @@
                 ->where('pharmacist', false)
                 ->whereHas('patient')
                 ->whereHas('doctor')
+                ->with('normal_drugs', function($n){
+                    $n->whereHas('normal_type_concoctions');
+                })
+                ->whereRaw('date(created_at) = ?', [Carbon::now()->format('Y-m-d')])
                 ->with('mix_drugs', function($m){
-                    $m->whereHas('type_concoctions');
+                    $m->whereHas('mix_type_concoctions');
                 })
                 ->whereRaw('date(created_at) = ?', [Carbon::now()->format('Y-m-d')])
                 ->paginate(5);
